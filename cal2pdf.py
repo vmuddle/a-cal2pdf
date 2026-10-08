@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import shutil
 import fpdf
+import datetime
 
 def run_cal_command(month, year):
     """Run the 'cal' command and return its output."""
@@ -41,9 +42,13 @@ def parse_cal_output(cal_output):
 
 def main():
     parser = argparse.ArgumentParser(description='Convert cal output to PDF.')
-    parser.add_argument('month', type=int, help='Month (1-12)')
-    parser.add_argument('year', type=int, help='Year (e.g., 2024)')
+    parser.add_argument('--month', type=int, help='Month (1-12)', required=False)
+    parser.add_argument('--year', type=int, help='Year (e.g., 2024)', required=False)
     args = parser.parse_args()
+    if args.month is None:
+        args.month = datetime.datetime.now().month
+    if args.year is None:
+        args.year = datetime.datetime.now().year
 
     cal_output = run_cal_command(args.month, args.year)
     month_map = parse_cal_output(cal_output)
