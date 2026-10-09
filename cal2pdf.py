@@ -76,8 +76,28 @@ def output_pdf(args, calendar_data):
 
     print(f"PDF generated: {pdf_output_path}")
 
+def examples():
+    example_message="\n".join([
+        "examples: cal2pdf.py --month 10 --year 2024 will generate 'cal_10_2024.pdf'.",
+        "          cal2pdf.py --month 1 --year 2024 will generate 'cal_01_2024.pdf'."
+        ]
+    )
+    return example_message
+
+def usage():
+    help_message="\n".join([
+        "  - A calendar PDF file will be generated with the name 'cal_<month>_<year>.pdf'.",
+        "  - If month and year are not provided, the current month and year will be used."
+        ]
+    )
+    return help_message
+
 def setup_command_line_arguments():
-    parser = argparse.ArgumentParser(description='Convert cal output to PDF.')
+    parser = argparse.ArgumentParser(
+        description=usage(),
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=examples()
+    )
     parser.add_argument('--month', type=int, help='Month (1-12)', required=False)
     parser.add_argument('--year', type=int, help='Year (e.g., 2024)', required=False)
     args = parser.parse_args()
