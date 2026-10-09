@@ -1,2 +1,5 @@
 .venv/**
 **.pdf
+__pycache__/**
+.vscode/**
+.coverage
