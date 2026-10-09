@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
  cal2pdf.py - Generate a PDF calendar for a given month and year using the 'cal' command.
 Usage:
@@ -7,14 +8,14 @@ Example:
     python cal2pdf.py --month 10 --year 2024
 
 """
-#!/usr/bin/env python3
 
 # call "cal" command and convert the output to pdf using enscript and ps2pdf
 
-import sys
-import datetime
 import argparse
+import datetime
 import subprocess
+import sys
+
 import fpdf
 
 
@@ -43,11 +44,9 @@ def run_cal_command(month, year):
 def parse_cal_output(cal_output):
     """Parse the output of the 'cal' command and return a list of lines."""
     lines = cal_output.splitlines()
-    line_counter = 0
     month_map = {}
-    for line in lines:
+    for line_counter, line in enumerate(lines, start=1):
         print(f"Cal output line: {line}")
-        line_counter += 1
         if line_counter == 1:
             print(f"Header line: {line}")
             month_map["header"] = line
@@ -92,24 +91,21 @@ def output_pdf(args, calendar_data):
 
 def examples():
     """Provide example usage for the command line."""
-    example_message = "\n".join(
-        [
-            "examples: cal2pdf.py --month 10 --year 2024 will generate 'cal_10_2024.pdf'.",
-            "          cal2pdf.py --month 1 --year 2024 will generate 'cal_01_2024.pdf'.",
-        ]
+    return (
+        "examples: cal2pdf.py --month 10 --year 2024 will generate "
+        "'cal_10_2024.pdf'.\n"
+        "          cal2pdf.py --month 1 --year 2024 will generate "
+        "'cal_01_2024.pdf'."
     )
-    return example_message
 
 
 def usage():
     """Provide usage information for the command line."""
-    help_message = "\n".join(
-        [
-            "  - A calendar PDF file will be generated with the name 'cal_<month>_<year>.pdf'.",
-            "  - If month and year are not provided, the current month and year will be used.",
-        ]
+    return (
+        "  - A calendar PDF file will be generated with the name "
+        "'cal_<month>_<year>.pdf'.\n"
+        "  - If month and year are not provided, the current month and year will be used."
     )
-    return help_message
 
 
 def setup_command_line_arguments():
@@ -123,7 +119,7 @@ def setup_command_line_arguments():
     parser.add_argument("--year", type=int, help="Year (e.g., 2024)", required=False)
     args = parser.parse_args()
     if args.month is None:
-        args.month = datetime.datetime.now().month
+        args.month = datetime.datetime.now(tz=datetime.timezone.utc).month
     else:
         if args.month < 1 or args.month > 12:
             print(
@@ -132,7 +128,7 @@ def setup_command_line_arguments():
             )
             sys.exit(1)
     if args.year is None:
-        args.year = datetime.datetime.now().year
+        args.year = datetime.datetime.now(tz=datetime.timezone.utc).year
     else:
         if args.year < 1:
             print(
@@ -178,10 +174,10 @@ def output_days_of_week(cell_width, cell_height, pdf, calendar_data):
     days_list = get_days_of_week_list(calendar_data)
     index = 0
     pdf.set_font("Courier", size=16, style="B")
-    for day in days_list:
+    for index, day in enumerate(days_list):
         pdf.set_xy(10 + (index * cell_width), 50)
         pdf.cell(cell_width, cell_height, text=day, border=1, align="C")
-        index += 1
+        #index += 1
         print(f"Added weekday to PDF: {day}")
 
 

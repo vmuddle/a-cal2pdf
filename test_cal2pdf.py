@@ -1,11 +1,12 @@
 # tests for cal2pdf.py
 
-from typing import Literal
+import datetime
+import os
+from typing import Literal, LiteralString
+
+import pytest
 
 import cal2pdf
-import pytest
-import os
-import datetime
 
 
 @pytest.fixture
@@ -40,9 +41,7 @@ def sample_month_map():
 )
 def test_cal2pdf_get_filename(
     inputs: tuple[int, int],
-    expected: Literal["cal_10_2024.pdf"]
-    | Literal["cal_01_2024.pdf"]
-    | Literal["cal_13_2024.pdf"],
+    expected: Literal["cal_10_2024.pdf", "cal_01_2024.pdf", "cal_13_2024.pdf"],
 ):
     filename = cal2pdf.get_filename(*inputs)
     print(f"Test get_filename: {filename}")
@@ -91,7 +90,7 @@ def test_cal2pdf_main_functionality_default(monkeypatch: pytest.MonkeyPatch):
     cal2pdf.main()
 
     # Get current month and year
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
     expected_filename = cal2pdf.get_filename(now.month, now.year)
 
     # Check if the PDF file was created
