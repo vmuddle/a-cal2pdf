@@ -11,6 +11,14 @@ import shutil
 import fpdf
 import datetime
 
+def get_filename(month, year):
+    """Get the filename for the output PDF."""
+    month_str = str(month).zfill(2)
+    year_str = str(year)
+    filename = f"cal_{month_str}_{year_str}.pdf"
+    print(f"Getting filename: {filename}")
+    return filename
+
 def run_cal_command(month, year):
     """Run the 'cal' command and return its output."""
     print(f"Running 'cal' command for month: {month}, year: {year}")
@@ -41,18 +49,14 @@ def parse_cal_output(cal_output):
     return month_map
 
 def main():
-    parser = argparse.ArgumentParser(description='Convert cal output to PDF.')
-    parser.add_argument('--month', type=int, help='Month (1-12)', required=False)
-    parser.add_argument('--year', type=int, help='Year (e.g., 2024)', required=False)
-    args = parser.parse_args()
-    if args.month is None:
-        args.month = datetime.datetime.now().month
-    if args.year is None:
-        args.year = datetime.datetime.now().year
+    # skip coverage for this function since it is the main entry point and not called during tests
+    args = setup_command_line_arguments()
 
     cal_output = run_cal_command(args.month, args.year)
-    month_map = parse_cal_output(cal_output)
+    parsed_cal_data = parse_cal_output(cal_output)
+    output_pdf(args, parsed_cal_data)
 
+def output_pdf(args, calendar_data):
     cellWidth = 25
     cellHeight = 25
 
@@ -62,11 +66,79 @@ def main():
     pdf.set_font("Courier", size=25, style='B')
 
     pdf.set_xy(0, cellHeight)
-    pdf.cell(0, cellHeight, text=month_map['header'])
-    days_list = []
-    for index in range(0, len(month_map['weekdays']), 3):
-        days_list.append(month_map['weekdays'][index:index+3].strip())
-    print(f"Parsed weekdays: {days_list}")
+    pdf.cell(0, cellHeight, text=calendar_data['header'])
+    
+    output_days_of_week(cellWidth, cellHeight, pdf, calendar_data)
+    output_day_numbers(calendar_data, cellWidth, cellHeight, pdf)
+    
+    pdf_output_path = f"cal_{args.month}_{args.year}.pdf"
+    pdf.output(pdf_output_path)
+
+    print(f"PDF generated: {pdf_output_path}")
+
+def examples():
+    example_message="\n".join([
+        "examples: cal2pdf.py --month 10 --year 2024 will generate 'cal_10_2024.pdf'.",
+        "          cal2pdf.py --month 1 --year 2024 will generate 'cal_01_2024.pdf'."
+        ]
+    )
+    return example_message
+
+def usage():
+    help_message="\n".join([
+        "  - A calendar PDF file will be generated with the name 'cal_<month>_<year>.pdf'.",
+        "  - If month and year are not provided, the current month and year will be used."
+        ]
+    )
+    return help_message
+
+def setup_command_line_arguments():
+    parser = argparse.ArgumentParser(
+        description=usage(),
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=examples()
+    )
+    parser.add_argument('--month', type=int, help='Month (1-12)', required=False)
+    parser.add_argument('--year', type=int, help='Year (e.g., 2024)', required=False)
+    args = parser.parse_args()
+    if args.month is None:
+        args.month = datetime.datetime.now().month
+    else:
+        if args.month < 1 or args.month > 12:
+            print(f"Invalid month: {args.month}. Month must be between 1 and 12.", file=sys.stderr)
+            sys.exit(1)
+    if args.year is None:
+        args.year = datetime.datetime.now().year
+    else:
+        if args.year < 1:
+            print(f"Invalid year: {args.year}. Year must be a positive integer.", file=sys.stderr)
+            sys.exit(1)
+    return args
+
+def output_day_numbers(calendar_data, cellWidth, cellHeight, pdf):
+    pdf.set_font("Courier", size=12, style='')
+    for i in range(1, len(calendar_data)):
+        if f'date_{i}' in calendar_data:
+            numbers = calendar_data[f'date_{i}']
+
+            print(f"Date line {i}: {calendar_data[f'date_{i}']}, numbers: {numbers}")
+            number_list = get_day_number_list(numbers)
+
+            for j, number in enumerate(number_list):
+                pdf.set_xy(10 + (j * cellWidth), 50 + (i * cellHeight)+5)
+                pdf.cell(cellWidth, 0, text=number, border=0, align='L')
+                pdf.set_xy(10 + (j * cellWidth), 50 + (i * cellHeight))
+                pdf.cell(cellWidth, cellHeight, border=1)
+
+def get_day_number_list(numbers):
+    number_list = []
+    for index in range(0, len(numbers), 3):
+        number_list.append(numbers[index:index+2].strip())
+    print(f"Parsed numbers for line {numbers}: {number_list}")
+    return number_list
+
+def output_days_of_week(cellWidth, cellHeight, pdf, calendar_data):
+    days_list = get_days_of_week_list(calendar_data)
     index = 0
     pdf.set_font("Courier", size=16, style='B')
     for day in days_list:
@@ -74,28 +146,14 @@ def main():
         pdf.cell(cellWidth, cellHeight, text=day, border=1, align='C')
         index += 1
         print(f"Added weekday to PDF: {day}")
-    pdf.set_font("Courier", size=12, style='')
-    for i in range(1, len(month_map)):
-        if f'date_{i}' in month_map:
-            numbers = month_map[f'date_{i}']
 
-            print(f"Date line {i}: {month_map[f'date_{i}']}, numbers: {numbers}")
-            number_list = []
-            for index in range(0, len(numbers), 3):
-                number_list.append(numbers[index:index+2].strip())
-            print(f"Parsed numbers for line {i}: {number_list}")
+def get_days_of_week_list(calendar_data):
+    days_list = []
+    for index in range(0, len(calendar_data['weekdays']), 3):
+        days_list.append(calendar_data['weekdays'][index:index+3].strip())
+    print(f"Parsed weekdays: {days_list}")
+    return days_list
 
-            for j, number in enumerate(number_list):
-                pdf.set_xy(10 + (j * cellWidth), 50 + (i * cellHeight)+5)
-                pdf.cell(cellWidth, 0, text=number, border=0, align='L')
-                pdf.set_xy(10 + (j * cellWidth), 50 + (i * cellHeight))
-                pdf.cell(cellWidth, cellHeight, border=1)
-    #for line in lines:
-    #    pdf.cell(0, 10, text=line)
 
-    pdf_output_path = f"cal_{args.month}_{args.year}.pdf"
-    pdf.output(pdf_output_path)
-
-    print(f"PDF generated: {pdf_output_path}")
-
-main()
+if __name__ == "__main__":
+    main()
