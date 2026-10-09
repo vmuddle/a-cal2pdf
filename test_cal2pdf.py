@@ -1,5 +1,7 @@
 # tests for cal2pdf.py
 
+from typing import Literal
+
 import cal2pdf
 import pytest
 import os
@@ -26,7 +28,7 @@ def sample_month_map():
     ((1, 2024), "cal_01_2024.pdf"),
     ((13, 2024), "cal_13_2024.pdf"),  # Invalid month, but still tests filename generation
 ])
-def test_cal2pdf_get_filename(inputs, expected):
+def test_cal2pdf_get_filename(inputs: tuple[int, int], expected: Literal['cal_10_2024.pdf'] | Literal['cal_01_2024.pdf'] | Literal['cal_13_2024.pdf']):
     filename = cal2pdf.get_filename(*inputs)
     print(f"Test get_filename: {filename}")
     assert filename == expected, f"Expected '{expected}', but got '{filename}'"
@@ -39,14 +41,14 @@ def test_cal2pdf_run_cal_command():
     assert "October" in output, "Expected 'October' in the output"
     assert str(year) in output, f"Expected '{year}' in the output"
 
-def test_cal2pdf_parse_cal_output(sample_cal_data):
+def test_cal2pdf_parse_cal_output(sample_cal_data: LiteralString):
     calendar_data = cal2pdf.parse_cal_output(sample_cal_data)
     print(f"Test parse_cal_output calendar_data: {calendar_data}")
     assert calendar_data['header'] == "   October 2024", "Header line mismatch"
     assert calendar_data['weekdays'] == "Su Mo Tu We Th Fr Sa", "Weekdays line mismatch"
     assert calendar_data['date_1'] == "       1  2  3  4  5", "Date line mismatch"
 
-def test_cal2pdf_main_functionality(monkeypatch):
+def test_cal2pdf_main_functionality(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '10', '--year', '2024'])
     
@@ -60,7 +62,7 @@ def test_cal2pdf_main_functionality(monkeypatch):
     # Clean up the generated PDF file after test
     os.remove(expected_filename)
 
-def test_cal2pdf_main_functionality_default(monkeypatch):
+def test_cal2pdf_main_functionality_default(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments without month and year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py'])
     
@@ -77,7 +79,7 @@ def test_cal2pdf_main_functionality_default(monkeypatch):
     # Clean up the generated PDF file after test
     os.remove(expected_filename)
 
-def test_cal2pdf_main_functionality_invalid_month(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_month(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid month
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '13', '--year', '2024'])
     
@@ -88,7 +90,7 @@ def test_cal2pdf_main_functionality_invalid_month(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid month"
 
-def test_cal2pdf_main_functionality_invalid_year(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_year(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '10', '--year', '-2024'])
     
@@ -99,7 +101,7 @@ def test_cal2pdf_main_functionality_invalid_year(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid year"
 
-def test_cal2pdf_main_functionality_invalid_month_and_year(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_month_and_year(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid month and year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '0', '--year', '-2024'])
     
@@ -110,7 +112,7 @@ def test_cal2pdf_main_functionality_invalid_month_and_year(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid month and year"
 
-def test_cal2pdf_main_functionality_invalid_month_and_year_2(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_month_and_year_2(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid month and year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '15', '--year', '0'])
     
@@ -121,7 +123,7 @@ def test_cal2pdf_main_functionality_invalid_month_and_year_2(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid month and year"
 
-def test_cal2pdf_main_functionality_invalid_month_and_year_3(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_month_and_year_3(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid month and year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '-1', '--year', '2024'])
     
@@ -132,7 +134,7 @@ def test_cal2pdf_main_functionality_invalid_month_and_year_3(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid month and year"
 
-def test_cal2pdf_main_functionality_invalid_month_and_year_4(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_month_and_year_4(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid month and year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '10', '--year', '-1'])
     
@@ -143,7 +145,7 @@ def test_cal2pdf_main_functionality_invalid_month_and_year_4(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid month and year"
 
-def test_cal2pdf_main_functionality_invalid_month_and_year_5(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_month_and_year_5(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid month and year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '0', '--year', '0'])
     
@@ -154,7 +156,7 @@ def test_cal2pdf_main_functionality_invalid_month_and_year_5(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid month and year"
 
-def test_cal2pdf_main_functionality_invalid_month_and_year_6(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_month_and_year_6(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid month and year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '13', '--year', '-1'])
     
@@ -165,7 +167,7 @@ def test_cal2pdf_main_functionality_invalid_month_and_year_6(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid month and year"
 
-def test_cal2pdf_main_functionality_invalid_month_and_year_7(monkeypatch):
+def test_cal2pdf_main_functionality_invalid_month_and_year_7(monkeypatch: pytest.MonkeyPatch):
     # Mock the command line arguments with an invalid month and year
     monkeypatch.setattr('sys.argv', ['cal2pdf.py', '--month', '-5', '--year', '0'])
     
@@ -176,7 +178,7 @@ def test_cal2pdf_main_functionality_invalid_month_and_year_7(monkeypatch):
     assert e.type == SystemExit
     assert e.value.code == 1, "Expected exit code 1 for invalid month and year"
 
-def test_cal2pdf_get_days_of_week_list(sample_month_map):
+def test_cal2pdf_get_days_of_week_list(sample_month_map: dict[str, str]):
     days_list = cal2pdf.get_days_of_week_list(sample_month_map)
     print(f"Test get_days_of_week_list: {days_list}")
     assert days_list == ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'], "Days of week list mismatch"
