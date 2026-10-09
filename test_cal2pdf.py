@@ -9,6 +9,7 @@ import datetime
 
 @pytest.fixture
 def sample_cal_data():
+    """Sample output from the 'cal' command for October 2024."""
     return "   October 2024\nSu Mo Tu We Th Fr Sa\n       1  2  3  4  5\n 6  7  8  9 10 11 12\n13 14 15 16 17 18 19\n20 21 22 23 24 25 26\n27 28 29 30 31"
 
 @pytest.fixture
