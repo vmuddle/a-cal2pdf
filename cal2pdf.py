@@ -17,27 +17,29 @@ import subprocess
 import sys
 
 import fpdf
+import loguru
 
+#loguru.logger.add("cal2pdf.log", rotation="1 MB", level="ERROR", backtrace=True, diagnose=True)
 
 def get_filename(month, year):
     """Get the filename for the output PDF."""
     month_str = str(month).zfill(2)
     year_str = str(year)
     filename = f"cal_{month_str}_{year_str}.pdf"
-    print(f"Getting filename: {filename}")
+    loguru.logger.debug(f"Getting filename: {filename}")
     return filename
 
 
 def run_cal_command(month, year):
     """Run the 'cal' command and return its output."""
-    print(f"Running 'cal' command for month: {month}, year: {year}")
+    loguru.logger.debug(f"Running 'cal' command for month: {month}, year: {year}")
     try:
         result = subprocess.run(
             ["cal", str(month), str(year)], capture_output=True, text=True, check=True
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
-        print(f"Error running cal command: {e}", file=sys.stderr)
+        loguru.logger.error(f"Error running cal command: {e}")
         sys.exit(1)
 
 
@@ -46,15 +48,15 @@ def parse_cal_output(cal_output):
     lines = cal_output.splitlines()
     month_map = {}
     for line_counter, line in enumerate(lines, start=1):
-        print(f"Cal output line: {line}")
+        loguru.logger.debug(f"Cal output line: {line}")
         if line_counter == 1:
-            print(f"Header line: {line}")
+            loguru.logger.debug(f"Header line: {line}")
             month_map["header"] = line
         elif line_counter == 2:
-            print(f"Weekdays line: {line}")
+            loguru.logger.debug(f"Weekdays line: {line}")
             month_map["weekdays"] = line
         else:
-            print(f"Date line: {line}")
+            loguru.logger.debug(f"Date line: {line}")
             month_map[f"date_{line_counter-2}"] = line
     return month_map
 
@@ -86,6 +88,7 @@ def output_pdf(args, calendar_data):
     pdf_output_path = f"cal_{args.month}_{args.year}.pdf"
     pdf.output(pdf_output_path)
 
+    loguru.logger.info(f"PDF generated: {pdf_output_path}")
     print(f"PDF generated: {pdf_output_path}")
 
 
@@ -108,6 +111,8 @@ def usage():
     )
 
 
+
+
 def setup_command_line_arguments():
     """Set up command line arguments for the script."""
     parser = argparse.ArgumentParser(
@@ -117,23 +122,28 @@ def setup_command_line_arguments():
     )
     parser.add_argument("--month", type=int, help="Month (1-12)", required=False)
     parser.add_argument("--year", type=int, help="Year (e.g., 2024)", required=False)
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output", required=False, default=False)
     args = parser.parse_args()
+    if args.verbose:
+        loguru.logger.remove()  # Remove the default logger
+        loguru.logger.add(sys.stderr, level="DEBUG")  # Add a new logger for verbose output
+    else:
+        loguru.logger.remove()  # Remove the default logger
+        loguru.logger.add(sys.stderr, level="ERROR")  # Add a new logger for error output
     if args.month is None:
         args.month = datetime.datetime.now(tz=datetime.timezone.utc).month
     else:
         if args.month < 1 or args.month > 12:
-            print(
-                f"Invalid month: {args.month}. Month must be between 1 and 12.",
-                file=sys.stderr,
+            loguru.logger.error(
+                f"Invalid month: {args.month}. Month must be between 1 and 12."
             )
             sys.exit(1)
     if args.year is None:
         args.year = datetime.datetime.now(tz=datetime.timezone.utc).year
     else:
         if args.year < 1:
-            print(
-                f"Invalid year: {args.year}. Year must be a positive integer.",
-                file=sys.stderr,
+            loguru.logger.error(
+                f"Invalid year: {args.year}. Year must be a positive integer."
             )
             sys.exit(1)
     return args
@@ -146,7 +156,7 @@ def output_day_numbers(calendar_data, cell_width, cell_height, pdf):
         if f"date_{i}" in calendar_data:
             numbers = calendar_data[f"date_{i}"]
 
-            print(f"Date line {i}: {calendar_data[f'date_{i}']}, numbers: {numbers}")
+            loguru.logger.debug(f"Date line {i}: {calendar_data[f'date_{i}']}, numbers: {numbers}")
             number_list = get_day_number_list(numbers)
 
             for j, number in enumerate(number_list):
@@ -165,7 +175,7 @@ def get_day_number_list(numbers):
     number_list = []
     for index in range(0, len(numbers), 3):
         number_list.append(numbers[index : index + 2].strip())
-    print(f"Parsed numbers for line {numbers}: {number_list}")
+    loguru.logger.debug(f"Parsed numbers for line {numbers}: {number_list}")
     return number_list
 
 
@@ -178,7 +188,7 @@ def output_days_of_week(cell_width, cell_height, pdf, calendar_data):
         pdf.set_xy(10 + (index * cell_width), 50)
         pdf.cell(cell_width, cell_height, text=day, border=1, align="C")
         #index += 1
-        print(f"Added weekday to PDF: {day}")
+        loguru.logger.debug(f"Added weekday to PDF: {day}")
 
 
 def get_days_of_week_list(calendar_data):
@@ -189,7 +199,7 @@ def get_days_of_week_list(calendar_data):
     days_list = []
     for index in range(0, len(calendar_data["weekdays"]), 3):
         days_list.append(calendar_data["weekdays"][index : index + 3].strip())
-    print(f"Parsed weekdays: {days_list}")
+    loguru.logger.debug(f"Parsed weekdays: {days_list}")
     return days_list
 
 
