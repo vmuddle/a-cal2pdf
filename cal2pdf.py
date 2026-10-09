@@ -68,12 +68,13 @@ def main():
         days_list.append(month_map['weekdays'][index:index+3].strip())
     print(f"Parsed weekdays: {days_list}")
     index = 0
-    pdf.set_font("Courier", size=12, style='')
+    pdf.set_font("Courier", size=16, style='B')
     for day in days_list:
         pdf.set_xy(10 + (index * cellWidth), 50)
         pdf.cell(cellWidth, cellHeight, text=day, border=1, align='C')
         index += 1
         print(f"Added weekday to PDF: {day}")
+    pdf.set_font("Courier", size=12, style='')
     for i in range(1, len(month_map)):
         if f'date_{i}' in month_map:
             numbers = month_map[f'date_{i}']
